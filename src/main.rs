@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{app::AppExit, prelude::*, window::PrimaryWindow};
 use rand::random;
 
 pub const PLAYER_SIZE: f32 = 64.0;
@@ -6,19 +6,39 @@ pub const PLAYER_SPEED: f32 = 500.0;
 pub const NUMBER_OF_ENEMIES: usize = 4;
 pub const ENEMY_SPEED: f32 = 200.0;
 pub const ENEMY_SIZE: f32 = 64.0;
+pub const NUMBER_OF_STARS: usize = 10;
+pub const STAR_SIZE: f32 = 30.0;
+pub const STAR_SPAWN_TIME: f32 = 1.0;
+pub const ENEMY_SPAWN_TIME: f32 = 10.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .init_resource::<Score>()
+        .init_resource::<HighScore>()
+        .init_resource::<StarSpawnTimer>()
+        .init_resource::<EnemySpawnTimer>()
+        .add_event::<GameOver>()
         .add_systems(Startup, spawn_camera)
         .add_systems(Startup, spawn_palyer)
         .add_systems(Startup, spawn_enemies)
+        .add_systems(Startup, spawn_stars)
         .add_systems(Update, player_movement)
         .add_systems(Update, confine_player_movement)
         .add_systems(Update, enemy_movement)
         .add_systems(Update, update_enemy_movement)
         .add_systems(Update, confine_enemy_movement)
         .add_systems(Update, enemy_hit_player)
+        .add_systems(Update, player_hit_star)
+        .add_systems(Update, update_score)
+        .add_systems(Update, tick_star_spawn_timer)
+        .add_systems(Update, spawn_stars_overtime)
+        .add_systems(Update, tick_enemy_spawn_timer)
+        .add_systems(Update, spawn_enemies_overtime)
+        .add_systems(Update, update_high_scores)
+        .add_systems(Update, high_scores_updated)
+        .add_systems(Update, handle_game_over)
+        .add_systems(Update, exit_game)
         .run();
 }
 
@@ -28,6 +48,62 @@ pub struct Player {}
 #[derive(Component)]
 pub struct Enemy {
     pub direction: Vec2,
+}
+
+#[derive(Component)]
+pub struct Star {}
+
+#[derive(Resource)]
+pub struct Score {
+    pub value: u32,
+}
+
+impl Default for Score {
+    fn default() -> Self {
+        Score { value: 0 }
+    }
+}
+
+#[derive(Resource, Debug)]
+pub struct HighScore {
+    pub scores: Vec<(String, u32)>,
+}
+
+impl Default for HighScore {
+    fn default() -> Self {
+        HighScore { scores: Vec::new() }
+    }
+}
+
+#[derive(Resource)]
+pub struct StarSpawnTimer {
+    pub timer: Timer,
+}
+
+impl Default for StarSpawnTimer {
+    fn default() -> Self {
+        StarSpawnTimer {
+            timer: Timer::from_seconds(STAR_SPAWN_TIME, TimerMode::Repeating),
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct EnemySpawnTimer {
+    pub timer: Timer,
+}
+
+impl Default for EnemySpawnTimer {
+    fn default() -> Self {
+        EnemySpawnTimer {
+            timer: Timer::from_seconds(ENEMY_SPAWN_TIME, TimerMode::Repeating),
+        }
+    }
+}
+
+#[derive(Event)]
+pub struct GameOver {
+    pub score: u32,
 }
 
 pub fn spawn_palyer(
@@ -76,6 +152,27 @@ pub fn spawn_enemies(
             Enemy {
                 direction: Vec2::new(random::<f32>(), random::<f32>()).normalize(),
             },
+        ));
+    }
+}
+
+pub fn spawn_stars(
+    mut command: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+) {
+    let window = window_query.get_single().unwrap();
+
+    for _ in 0..NUMBER_OF_STARS {
+        let random_x = random::<f32>() * window.width();
+        let random_y = random::<f32>() * window.height();
+        command.spawn((
+            Transform::from_xyz(random_x, random_y, 0.0),
+            Sprite {
+                image: asset_server.load("sprites/star.png"),
+                ..Default::default()
+            },
+            Star {},
         ));
     }
 }
@@ -148,41 +245,41 @@ pub fn enemy_movement(mut enemy_query: Query<(&mut Transform, &Enemy)>, time: Re
 }
 
 pub fn update_enemy_movement(
-    mut command: Commands,
+    mut _command: Commands,
     mut enemy_query: Query<(&Transform, &mut Enemy)>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
+    _asset_server: Res<AssetServer>,
 ) {
     let window = window_query.get_single().unwrap();
 
     let half_enemy_size = PLAYER_SIZE / 2.0;
-    let x_min = 10.0 + half_enemy_size;
+    let x_min = 0.0 + half_enemy_size;
     let x_max = window.width() - half_enemy_size;
-    let y_min = 10.0 + half_enemy_size;
+    let y_min = 0.0 + half_enemy_size;
     let y_max = window.height() - half_enemy_size;
 
     for (transform, mut enemy) in enemy_query.iter_mut() {
-        let mut direction_change: bool = false;
+        let mut _direction_change: bool = false;
         let translation = transform.translation;
         if translation.x < x_min || translation.x > x_max {
             enemy.direction *= -1.0;
-            direction_change = true;
+            _direction_change = true;
         }
         if translation.y < y_min || translation.y > y_max {
             enemy.direction *= -1.0;
-            direction_change = true;
+            _direction_change = true;
         }
 
-        if direction_change {
-            let sound_effect_1 = asset_server.load("audio/click_001.ogg");
-            let sound_effect_2 = asset_server.load("audio/click_002.ogg");
+        // if direction_change {
+        //     let sound_effect_1 = asset_server.load("audio/click_001.ogg");
+        //     let sound_effect_2 = asset_server.load("audio/click_002.ogg");
 
-            if random::<f32>() > 0.5 {
-                command.spawn(AudioPlayer::new(sound_effect_1))
-            } else {
-                command.spawn(AudioPlayer::new(sound_effect_2))
-            };
-        }
+        //     if random::<f32>() > 0.5 {
+        //         command.spawn(AudioPlayer::new(sound_effect_1))
+        //     } else {
+        //         command.spawn(AudioPlayer::new(sound_effect_2))
+        //     };
+        // }
     }
 }
 
@@ -219,7 +316,9 @@ pub fn confine_enemy_movement(
 pub fn enemy_hit_player(
     mut command: Commands,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
+    mut game_over_event_writer: EventWriter<GameOver>,
     enemy_query: Query<&Transform, With<Enemy>>,
+    score: Res<Score>,
     _asset_server: Res<AssetServer>,
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
@@ -232,7 +331,120 @@ pub fn enemy_hit_player(
             if distance < player_radius + enemy_radius {
                 println!("game over !!!");
                 command.entity(player_entity).despawn();
+                game_over_event_writer.send(GameOver { score: score.value });
             }
         }
+    }
+}
+
+pub fn player_hit_star(
+    mut command: Commands,
+    star_query: Query<(Entity, &Transform), With<Star>>,
+    player_query: Query<&Transform, With<Player>>,
+    mut score: ResMut<Score>,
+) {
+    if let Ok(player_transform) = player_query.get_single() {
+        for (star_entity, star_transform) in star_query.iter() {
+            let distance = star_transform
+                .translation
+                .distance(player_transform.translation);
+            let player_radius = PLAYER_SIZE / 2.0;
+            let star_radius = STAR_SIZE / 2.0;
+            if distance < player_radius + star_radius {
+                println!("Get star !!!");
+                score.value += 1;
+                command.entity(star_entity).despawn();
+            }
+        }
+    }
+}
+
+pub fn update_score(score: Res<Score>) {
+    if score.is_changed() {
+        println!("Score : {}", score.value.to_string());
+    }
+}
+
+pub fn tick_star_spawn_timer(mut star_spawn_timer: ResMut<StarSpawnTimer>, time: Res<Time>) {
+    star_spawn_timer.timer.tick(time.delta());
+}
+
+pub fn spawn_stars_overtime(
+    mut command: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+    star_spawn_timer: Res<StarSpawnTimer>,
+) {
+    if star_spawn_timer.timer.finished() {
+        let window = window_query.get_single().unwrap();
+
+        let random_x = random::<f32>() * window.width();
+        let random_y = random::<f32>() * window.height();
+        command.spawn((
+            Transform::from_xyz(random_x, random_y, 0.0),
+            Sprite {
+                image: asset_server.load("sprites/star.png"),
+                ..Default::default()
+            },
+            Star {},
+        ));
+    }
+}
+
+pub fn tick_enemy_spawn_timer(mut enemy_spawn_timer: ResMut<EnemySpawnTimer>, time: Res<Time>) {
+    enemy_spawn_timer.timer.tick(time.delta());
+}
+
+pub fn spawn_enemies_overtime(
+    mut command: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+    enemy_spawn_timer: ResMut<EnemySpawnTimer>,
+) {
+    if enemy_spawn_timer.timer.finished() {
+        let window = window_query.get_single().unwrap();
+        let random_x = random::<f32>() * window.width();
+        let random_y = random::<f32>() * window.height();
+
+        command.spawn((
+            Transform::from_xyz(random_x, random_y, 0.0),
+            Sprite {
+                image: asset_server.load("sprites/ball_red_large.png"),
+                ..Default::default()
+            },
+            Enemy {
+                direction: Vec2::new(random::<f32>(), random::<f32>()).normalize(),
+            },
+        ));
+    }
+}
+
+pub fn exit_game(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut app_exit_event_writer: EventWriter<AppExit>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        app_exit_event_writer.send(AppExit::Success);
+    }
+}
+
+pub fn handle_game_over(mut game_over_event_reader: EventReader<GameOver>) {
+    for event in game_over_event_reader.read() {
+        println!("your final score is {}", event.score.to_string());
+    }
+}
+
+pub fn update_high_scores(
+    mut game_over_event_reader: EventReader<GameOver>,
+    mut high_scores: ResMut<HighScore>,
+) {
+    for event in game_over_event_reader.read() {
+        high_scores.scores.push(("Player".to_string(), event.score));
+    }
+}
+
+pub fn high_scores_updated(high_scores: Res<HighScore>) {
+    if high_scores.is_changed() {
+        println!("High scores: {:?}", high_scores);
     }
 }
