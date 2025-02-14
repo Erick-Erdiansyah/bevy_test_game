@@ -1,13 +1,19 @@
 use bevy::prelude::*;
-pub mod components;
-pub mod resources;
-pub mod events;
+mod enemy;
+mod player;
+mod score;
+mod star;
 mod systems;
 
-use events::*;
-use resources::*;
-use systems::*;
-
+use enemy::enemy_systems::*;
+use enemy::enemy_resources::*;
+use player::player_systems::*;
+use score::score_events::GameOver;
+use score::score_systems::*;
+use score::score_resources::*;
+use star::star_systems::*;
+use star::star_resources::*;
+use systems::exit_game;
 
 fn main() {
     App::new()
