@@ -8,7 +8,7 @@ pub const PLAYER_SIZE: f32 = 64.0;
 pub const PLAYER_SPEED: f32 = 500.0;
 
 
-pub fn spawn_palyer(
+pub fn spawn_player(
   mut commands: Commands,
   window_query: Query<&Window, With<PrimaryWindow>>,
   asset_server: Res<AssetServer>,

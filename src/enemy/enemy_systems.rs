@@ -1,7 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::random;
 
-
 use crate::player::player_components::*;
 use crate::score::score_resources::*;
 use crate::enemy::enemy_resources::*;
@@ -11,7 +10,6 @@ use crate::enemy::enemy_components::*;
 pub const NUMBER_OF_ENEMIES: usize = 4;
 pub const ENEMY_SPEED: f32 = 200.0;
 pub const ENEMY_SIZE: f32 = 64.0;
-
 
 pub fn spawn_enemies(
   mut commands: Commands,
@@ -37,11 +35,11 @@ pub fn spawn_enemies(
   }
 }
 
-
 pub fn enemy_movement(mut enemy_query: Query<(&mut Transform, &Enemy)>, time: Res<Time>) {
   for (mut transform, enemy) in enemy_query.iter_mut() {
       let direction = Vec3::new(enemy.direction.x, enemy.direction.y, 0.0);
       transform.translation += direction * ENEMY_SPEED * time.delta_secs();
+      println!("Delta time: {}", time.delta_secs());
   }
 }
 
@@ -63,11 +61,11 @@ pub fn update_enemy_movement(
       let mut _direction_change: bool = false;
       let translation = transform.translation;
       if translation.x < x_min || translation.x > x_max {
-          enemy.direction *= -1.0;
+          enemy.direction.x *= -1.0;
           _direction_change = true;
       }
       if translation.y < y_min || translation.y > y_max {
-          enemy.direction *= -1.0;
+          enemy.direction.y *= -1.0;
           _direction_change = true;
       }
 
@@ -95,8 +93,8 @@ pub fn confine_enemy_movement(
   let x_max = window.width() - half_enemy_size;
   let y_min = 0.0 + half_enemy_size;
   let y_max = window.height() - half_enemy_size;
-  for mut enemy_transform in enemy_query.iter_mut() {
-      let mut translation = enemy_transform.translation;
+  for mut transform in enemy_query.iter_mut() {
+      let mut translation = transform.translation;
 
       if translation.x < x_min {
           translation.x = x_min
@@ -110,7 +108,7 @@ pub fn confine_enemy_movement(
           translation.y = y_max
       }
 
-      enemy_transform.translation = translation;
+      transform.translation = translation;
   }
 }
 
