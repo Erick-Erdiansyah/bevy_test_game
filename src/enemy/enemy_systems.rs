@@ -39,7 +39,6 @@ pub fn enemy_movement(mut enemy_query: Query<(&mut Transform, &Enemy)>, time: Re
   for (mut transform, enemy) in enemy_query.iter_mut() {
       let direction = Vec3::new(enemy.direction.x, enemy.direction.y, 0.0);
       transform.translation += direction * ENEMY_SPEED * time.delta_secs();
-      println!("Delta time: {}", time.delta_secs());
   }
 }
 
