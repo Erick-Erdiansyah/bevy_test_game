@@ -63,7 +63,7 @@ pub fn text_font_32(asset_server: &Res<AssetServer>) -> TextFont {
 pub fn text_font_64(asset_server: &Res<AssetServer>) -> TextFont {
     TextFont {
         font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-        font_size: 32.0,
+        font_size: 64.0,
         ..Default::default()
     }
 }

@@ -5,12 +5,14 @@ mod player;
 mod score;
 mod star;
 mod systems;
+mod ui;
 
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
 use score::ScorePlugin;
 use star::StarPlugin;
 use systems::*;
+use ui::UIPlugin;
 use crate::AppState;
 
 
@@ -25,6 +27,7 @@ impl Plugin for GamePlugin {
             .add_plugins(PlayerPlugin)
             .add_plugins(ScorePlugin)
             .add_plugins(StarPlugin)
+            .add_plugins(UIPlugin)
             .add_systems(Update, toggle_simulation.run_if(in_state(AppState::Game)));
     }
 }
