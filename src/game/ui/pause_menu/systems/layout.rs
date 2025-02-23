@@ -24,7 +24,7 @@ pub fn build_pause_menu(commands: &mut Commands, asset_server: &Res<AssetServer>
         .with_children(|parent| {
             parent.spawn(title_style()).with_children(|parent| {
                 parent.spawn((
-                    Text::new("PAUSE MENU"),
+                    Text::new("PAUSED"),
                     text_font_64(&asset_server),
                     TextColor::WHITE,
                     TextLayout::new_with_justify(JustifyText::Center),
