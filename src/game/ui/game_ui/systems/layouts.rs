@@ -37,6 +37,18 @@ pub fn build_game_ui(commands: &mut Commands, asset_server: &Res<AssetServer>) -
                         TextLayout::new_with_justify(JustifyText::Left),
                         ScoreText {},
                     ));
+                    parent.spawn((
+                        ImageNode::new(asset_server.load("sprites/ball_red_large.png"))
+                            .with_mode(NodeImageMode::Auto),
+                        star_image_style(),
+                    ));
+                    parent.spawn((
+                        Text::new("0"),
+                        text_font_32(&asset_server),
+                        TextColor::WHITE,
+                        TextLayout::new_with_justify(JustifyText::Left),
+                        EnemyCount {},
+                    ));
                 });
         })
         .id();

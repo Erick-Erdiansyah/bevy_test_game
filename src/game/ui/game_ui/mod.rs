@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use systems::{interactions::update_score_text, layouts::*};
+use systems::{
+    interactions::{update_enemy_ball, update_score_text},
+    layouts::*,
+};
 
 use crate::game::{AppState, SimulationState};
 
@@ -14,7 +17,7 @@ impl Plugin for GameUI {
         app.add_systems(OnEnter(AppState::Game), spawn_game_ui)
             .add_systems(
                 Update,
-                update_score_text
+                (update_score_text, update_enemy_ball)
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )
