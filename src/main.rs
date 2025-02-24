@@ -11,7 +11,7 @@ use main_menu::MenuPlugin;
 
 fn main() {
     App::new()
-    .add_plugins(DefaultPlugins)
+    .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
     .init_state::<AppState>()
     .add_plugins(MenuPlugin)
     .add_plugins(GamePlugin)
