@@ -55,6 +55,7 @@ pub fn execute_animation(time: Res<Time>, mut query: Query<(&mut AnimationConfig
                     atlas.index = config.first_sprite_index;
                 } else {
                     atlas.index += 1;
+                    // i think the frame should move when the direction change
                     config.frame_timer = AnimationConfig::timer_from_fps(config.fps);
                 }
             }
