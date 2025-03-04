@@ -23,7 +23,7 @@ pub fn spawn_player(
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 4, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
-    let animation_config = AnimationConfig::new(0, 3, 12);
+    let animation_config = AnimationConfig::new(0, 3, 2);
 
     commands.spawn((
         Sprite {
@@ -79,6 +79,16 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
     ));
 }
 
+// fn trigger_animation(
+//     // keyboard_input: Res<ButtonInput<KeyCode>>,
+//     mut player_query: Query<&mut AnimationConfig, With<Player>>,
+// ) {
+//     for mut animation in player_query.iter_mut() {
+//         animation.fps = 10;
+//         animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
+//     }
+// }
+
 pub fn player_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&mut Transform, &mut AnimationConfig), With<Player>>,
@@ -87,19 +97,19 @@ pub fn player_movement(
     if let Ok((mut transform, mut animation)) = player_query.get_single_mut() {
         let mut direction = Vec3::ZERO;
         if keyboard_input.pressed(KeyCode::ArrowLeft) || keyboard_input.pressed(KeyCode::KeyA) {
-            animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
+            animation.fps = 10;
             direction += Vec3::new(-1.0, 0.0, 0.0);
         }
         if keyboard_input.pressed(KeyCode::ArrowRight) || keyboard_input.pressed(KeyCode::KeyD) {
-            animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
+            animation.fps = 10;
             direction += Vec3::new(1.0, 0.0, 0.0);
         }
         if keyboard_input.pressed(KeyCode::ArrowUp) || keyboard_input.pressed(KeyCode::KeyW) {
-            animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
+            animation.fps = 10;
             direction += Vec3::new(0.0, 1.0, 0.0);
         }
         if keyboard_input.pressed(KeyCode::ArrowDown) || keyboard_input.pressed(KeyCode::KeyS) {
-            animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
+            animation.fps = 10;
             direction += Vec3::new(0.0, -1.0, 0.0);
         }
 
@@ -107,6 +117,7 @@ pub fn player_movement(
             direction = direction.normalize();
         }
 
+        animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
         transform.translation += direction * PLAYER_SPEED * time.delta_secs();
     }
 }
